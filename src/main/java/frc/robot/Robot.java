@@ -18,19 +18,52 @@ public class Robot extends TimedRobot {
   private final SlewRateLimiter m_xspeedLimiter = new SlewRateLimiter(3);
   private final SlewRateLimiter m_yspeedLimiter = new SlewRateLimiter(3);
   private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(3);
-  String shift_data = DriverStation.getGameSpecificMessage(); 
+  String game_data; 
+  boolean data_processed;
+  char first_inactive_alliance;
 
   @Override
   public void autonomousPeriodic() {
     driveWithJoystick(false);
     m_swerve.updateOdometry();
-    System.out.println(shift_data);
+  }
+
+  @Override
+  public void teleopInit(){
+    data_processed = false;
+    game_data = DriverStation.getGameSpecificMessage();
+
   }
 
   @Override
   public void teleopPeriodic() {
     driveWithJoystick(true);
-    
+
+    if (!data_processed) {
+        game_data = DriverStation.getGameSpecificMessage();
+
+        if (game_data.length() > 0) {
+          first_inactive_alliance = game_data.charAt(0);
+
+          switch(first_inactive_alliance) {
+            case 'R':
+              System.out.println("RED");
+              data_processed = true;
+              break;
+            case 'B':
+              System.out.println("BLUE");
+              data_processed = true;
+
+              break;
+            default:
+              System.out.println("Corrupted data found.");
+              data_processed = true;
+              break;
+          }  
+        } else {
+          System.out.println("No data found.");
+        }
+    }
   }
 
   private void driveWithJoystick(boolean fieldRelative) {
