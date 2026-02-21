@@ -4,11 +4,15 @@
 
 package frc.robot;
 
+import java.util.Optional;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.Timer;
 
 public class Robot extends TimedRobot {
   private final XboxController m_controller = new XboxController(0);
@@ -21,6 +25,7 @@ public class Robot extends TimedRobot {
   String game_data; 
   boolean data_processed;
   char first_inactive_alliance;
+  Optional<Alliance> ally; 
 
   @Override
   public void autonomousPeriodic() {
@@ -32,21 +37,17 @@ public class Robot extends TimedRobot {
   public void teleopInit(){
     data_processed = false;
     game_data = DriverStation.getGameSpecificMessage();
+    ally = DriverStation.getAlliance();
 
-  }
-
-  @Override
-  public void teleopPeriodic() {
-    driveWithJoystick(true);
 
     if (!data_processed) {
         game_data = DriverStation.getGameSpecificMessage();
 
-        if (game_data.length() > 0) {
+        if (game_data.length() > 0 || ally.isPresent()) {
           first_inactive_alliance = game_data.charAt(0);
-
+          
           switch(first_inactive_alliance) {
-            case 'R':
+            case 'R': 
               System.out.println("RED");
               data_processed = true;
               break;
@@ -64,7 +65,18 @@ public class Robot extends TimedRobot {
           System.out.println("No data found.");
         }
     }
+
   }
+  
+
+  @Override
+  public void teleopPeriodic() {
+    driveWithJoystick(true);
+
+
+  }
+
+
 
   private void driveWithJoystick(boolean fieldRelative) {
     // Get the x speed. We are inverting this because Xbox controllers return
